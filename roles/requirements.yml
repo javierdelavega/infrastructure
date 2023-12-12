@@ -1,0 +1,10 @@
+---
+roles:
+  - name: ansistrano.deploy
+  - name: ansistrano.rollback
+
+collections:
+  - name: community.mysql
+  - name: amazon.aws
+  - name: community.docker
+  - name: community.general

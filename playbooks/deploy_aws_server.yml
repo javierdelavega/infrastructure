@@ -1,0 +1,47 @@
+---
+
+- name: Deploy AWS EC2 instance
+  hosts: localhost
+  vars_files:
+    - secrets.yml
+  tasks:
+    - name: Run terraform project
+      community.general.terraform:
+        project_path: ../terraform
+        state: present
+      register: terraform
+
+    - name: Show EC2 instance public ip
+      ansible.builtin.debug:
+        var: terraform.outputs.public_ip.value
+
+    - name: Show EC2 instance public dns
+      ansible.builtin.debug:
+        var: terraform.outputs.public_dns.value
+
+    - name: Update hosts inventory file
+      ansible.builtin.template:
+        src: ../inventory/hosts.yml.j2
+        dest: ../inventory/hosts.yml
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Update semaphore UI inventory
+      ansible.builtin.uri:
+        url: "{{ semaphore_url }}/project/{{ semaphore_project_id }}/inventory/{{ semaphore_inventory_id }}"
+        method: PUT
+        headers:
+          Content-Type: application/json
+          Authorization: "Bearer {{ semaphore_access_token }}"
+        body: '{
+                "name": "hosts",
+                "project_id": 1,
+                "id": 1,
+                "inventory": "webservers:\n  hosts:\n    staging:\n      ansible_host: {{staging_host}}\n      ansible_user: {{ staging_user }}\n      host_backend_fqdn: {{ staging_backend_fqdn }}\n      host_frontend_fqdn: {{ staging_frontend_fqdn }}\n    production:\n      ansible_host: {{ production_host }}\n      ansible_user: {{ production_user }}\n      host_backend_fqdn: {{ production_backend_fqdn }}\n      host_frontend_fqdn: {{ production_frontend_fqdn }}\n    aws:\n      ansible_host: {{ terraform.outputs.public_dns.value }}\n      ansible_user: {{ aws_user }}\n      ansible_become: true\n      host_backend_fqdn: {{ aws_backend_fqdn }}\n      host_frontend_fqdn: {{ aws_frontend_fqdn }}",
+                "ssh_key_id": 1,
+                "become_key_id": null,
+                "type": "static-yaml"
+              }'
+        status_code: 204
+        body_format: json

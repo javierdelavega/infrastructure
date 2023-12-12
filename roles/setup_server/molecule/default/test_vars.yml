@@ -1,0 +1,10 @@
+---
+
+host_backend_fqdn: backend.test.com
+host_frontend_fqdn: frontend.test.com
+symfony_app_secret: "test$ecret"
+symfony_db_name: "testDbName"
+symfony_db_user: "testDbUser"
+symfony_db_password: "testDbPassword"
+nginx_backend_root: "/var/www/testapp/current/public"
+nginx_frontend_root: "/var/www/testapp-front/current"

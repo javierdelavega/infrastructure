@@ -1,0 +1,10 @@
+---
+
+- name: Deploy APP to STAGING
+  hosts: staging
+  vars:
+    deploy_target: "staging"
+  vars_files:
+    - secrets.yml
+  roles:
+    - { role: deploy_app }

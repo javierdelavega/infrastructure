@@ -1,0 +1,77 @@
+---
+
+- name: Get facts on current container
+  community.docker.current_container_facts:
+
+- name: Write MariaDB config file
+  ansible.builtin.template:
+    src: mariadb-server.cnf.j2
+    dest: "{{ mariadb_config_dir }}/{{ mariadb_config_file}}"
+    owner: root
+    group: root
+    mode: 0644
+  notify: (Handler) Run MARIADB
+  register: config_mariadb
+
+- name: Ensure that MariaDB systemd service config directories exists
+  ansible.builtin.file:
+    path: "{{ mariadb_systemd_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+  when: ansible_module_running_in_container
+
+- name: Write MariaDB systemd service config file for LXC containers
+  ansible.builtin.template:
+    src: mariadb-lxc.conf.j2
+    dest: "{{ mariadb_systemd_config_dir }}/lxc.conf"
+    owner: root
+    group: root
+    mode: 0644
+  notify: (Handler) Run MARIADB
+  when: ansible_module_running_in_container
+  register: config_mariadb_service
+
+- name: Write MariaDB debian config file for Debian based distributions
+  ansible.builtin.template:
+    src: mariadb-debian.cnf.j2
+    dest: "{{ mariadb_debian_config_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify: (Handler) Run MARIADB
+  when: ansible_facts['os_family'] == 'Debian'
+  register: config_mariadb_debian
+
+- name: Systemd daemon reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: config_mariadb_service.changed
+
+- name: Restart MARIADB to apply config changes
+  ansible.builtin.service:
+    name: mariadb
+    state: restarted
+  when: config_mariadb.changed or config_mariadb_service.changed or config_mariadb_debian.changed
+
+- name: Ensure MARIADB service is running
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+
+- name: Create codechallenge database
+  community.mysql.mysql_db:
+    check_implicit_admin: true
+    login_unix_socket: "{{ mariadb_socket }}"
+    name: "{{ symfony_db_name }}"
+    state: present
+
+- name: Create codechallenge app database user
+  community.mysql.mysql_user:
+    #column_case_sensitive: true
+    check_implicit_admin: true
+    login_unix_socket: "{{ mariadb_socket }}"
+    name: "{{ symfony_db_user }}"
+    password: "{{ symfony_db_password }}"
+    priv: "{{ symfony_db_name }}.*:ALL,GRANT"
+    state: present

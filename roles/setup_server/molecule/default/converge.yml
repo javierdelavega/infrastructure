@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include testing env vars
+      ansible.builtin.include_vars: "test_vars.yml"
+
+#    - name: Print all available facts
+#      ansible.builtin.debug:
+#        var: ansible_facts
+
+    - name: Setup server
+      ansible.builtin.include_role:
+        name: setup_server

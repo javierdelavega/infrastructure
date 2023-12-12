@@ -1,0 +1,86 @@
+---
+
+# Packages dependencies
+package_dependencies: "{{ lookup('ansible.builtin.vars', 'package_dependencies_' + ansible_facts['distribution'] | lower)}}"
+package_dependencies_debian: [git, unzip, python3-pymysql, curl]
+package_dependencies_ubuntu: [git, unzip, python3-mysqldb, curl, dirmngr]
+package_dependencies_rocky: [git, unzip, python3-PyMySQL]
+
+# Nginx variables
+nginx_user: "www-data"
+nginx_state: "{{ 'present' if nginx_version != '' else 'latest' }}"
+nginx_fascgi_pass: "unix:{{ lookup('ansible.builtin.vars', 'php_fpm_daemon_sock_' + ansible_facts['distribution'] | lower) }}"
+nginx_config_dir: "/etc/nginx"
+nginx_sites_available_dir: "{{ nginx_config_dir }}/sites-available"
+nginx_sites_enabled_dir: "{{ nginx_config_dir }}/sites-enabled"
+
+# Mariadb variables
+mariadb_state: "{{ 'present' if mariadb_version != '' else 'latest' }}"
+mariadb_datadir: "/var/lib/mysql"
+mariadb_socket: "/var/lib/mysql/mysql.sock"
+mariadb_log_error: "/var/log/mariadb/mariadb.log"
+
+mariadb_pid_file: "{{ lookup('ansible.builtin.vars', 'mariadb_pid_file_' + ansible_facts['distribution'] | lower)}}"
+mariadb_pid_file_debian: "/run/mysqld/mariadb.pid"
+mariadb_pid_file_ubuntu: "/run/mysqld/mariadb.pid"
+mariadb_pid_file_rocky: "/run/mariadb/mariadb.pid"
+
+mariadb_config_dir: "{{ lookup('ansible.builtin.vars', 'mariadb_config_dir_' + ansible_facts['distribution'] | lower)}}"
+mariadb_config_dir_debian: "/etc/mysql"
+mariadb_config_dir_ubuntu: "/etc/mysql"
+mariadb_config_dir_rocky: "/etc/my.cnf.d"
+
+mariadb_config_file: "{{ lookup('ansible.builtin.vars', 'mariadb_config_file_' + ansible_facts['distribution'] | lower)}}"
+mariadb_config_file_debian: "mariadb.cnf"
+mariadb_config_file_ubuntu: "mariadb.cnf"
+mariadb_config_file_rocky: "mariadb-server.cnf"
+mariadb_debian_config_file: "/etc/mysql/debian.cnf"
+
+mariadb_systemd_config_dir: "/etc/systemd/system/mariadb.service.d"
+
+### PHP variables ###
+
+php_version: "{{ php_branch if php_release == '' else php_release }}"
+php_state: "{{ 'present' if php_release != '' else 'latest' }}"
+
+php_extensions: "{{ lookup('ansible.builtin.vars', 'php_extensions_' + ansible_facts['distribution'] | lower)}}"
+php_extensions_rocky: [php-mysql, php-zip, php-xml, php-curl, php-intl, php-apcu]
+php_extensions_debian: ["php{{ php_version }}-mysql", "php{{ php_version }}-zip", "php{{ php_version }}-xml", "php{{ php_version }}-curl", "php{{ php_version }}-intl", "php{{ php_version }}-apcu"]
+php_extensions_ubuntu: ["php{{ php_version }}-mysql", "php{{ php_version }}-zip", "php{{ php_version }}-xml", "php{{ php_version }}-curl", "php{{ php_version }}-intl", "php{{ php_version }}-apcu"]
+
+php_fpm_daemon: "{{ lookup('ansible.builtin.vars', 'php_fpm_daemon_' + ansible_facts['distribution'] | lower)}}"
+php_fpm_daemon_debian: "php{{ php_version }}-fpm"
+php_fpm_daemon_ubuntu: "php{{ php_version }}-fpm"
+php_fpm_daemon_rocky: "php-fpm"
+
+php_fpm_daemon_sock: "{{ lookup('ansible.builtin.vars', 'php_fpm_daemon_sock_' + ansible_facts['distribution'] | lower)}}"
+php_fpm_daemon_sock_debian: "/run/php/php{{ php_version }}-fpm.sock"
+php_fpm_daemon_sock_ubuntu: "/run/php/php{{ php_version }}-fpm.sock"
+php_fpm_daemon_sock_rocky: "/run/php-fpm/www.sock"
+php_fpm_daemon_sock_dir: "{{ lookup('ansible.builtin.vars', 'php_fpm_daemon_sockdir_' + ansible_facts['distribution'] | lower)}}"
+php_fpm_daemon_sock_dir_debian: "/run/php"
+php_fpm_daemon_sock_dir_ubuntu: "/run/php"
+php_fpm_daemon_sock_dir_rocky: "/run/php-fpm"
+
+php_fpm_daemon_user: "{{ lookup('ansible.builtin.vars', 'php_fpm_daemon_user_' + ansible_facts['distribution'] | lower)}}"
+php_fpm_daemon_user_debian: "www-data"
+php_fpm_daemon_user_ubuntu: "www-data"
+php_fpm_daemon_user_rocky: "apache"
+
+php_fpm_daemon_config_file: "{{ lookup('ansible.builtin.vars', 'php_fpm_daemon_config_file_' + ansible_facts['distribution'] | lower)}}"
+php_fpm_daemon_config_file_debian: "/etc/php/8.2/fpm/pool.d/www.conf"
+php_fpm_daemon_config_file_ubuntu: "/etc/php/8.2/fpm/pool.d/www.conf"
+php_fpm_daemon_config_file_rocky: "/etc/php-fpm.d/www.conf"
+
+# Configuration directories and filenames
+php_config_dir: "{{ lookup('ansible.builtin.vars', 'php_config_dir_' + ansible_facts['distribution'] | lower)}}"
+php_config_dir_debian: "/etc/php/{{ php_version }}/fpm"
+php_config_dir_ubuntu: "/etc/php/{{ php_version }}/fpm"
+php_config_dir_rocky: "/etc"
+
+php_mod_config_dir: "{{ lookup('ansible.builtin.vars', 'php_mod_config_dir_' + ansible_facts['distribution'] | lower)}}"
+php_mod_config_dir_debian: "{{ php_config_dir_debian }}/conf.d"
+php_mod_config_dir_ubuntu: "{{ php_config_dir_debian }}/conf.d"
+php_mod_config_dir_rocky: "/etc/php.d/"
+
+php_apcu_filename: "20-apcu.ini"

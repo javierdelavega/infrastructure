@@ -1,0 +1,8 @@
+---
+
+- name: Setup webservers
+  hosts: webservers
+  vars_files:
+    - secrets.yml
+  roles:
+    - { role: setup_server }

@@ -1,0 +1,8 @@
+---
+
+- name: Deploy APP to PRODUCTION
+  hosts: aws
+  vars:
+    deploy_target: "production"
+  roles:
+    - { role: deploy_app }

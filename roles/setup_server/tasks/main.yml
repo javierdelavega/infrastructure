@@ -1,0 +1,72 @@
+---
+- name: Include php configuration variables
+  ansible.builtin.include_vars: php.yml
+
+- name: Check that required role variables are defined
+  ansible.builtin.assert:
+    that:
+      - "{{ item }} is defined"
+    fail_msg: Required variable {{ item }} is not defined
+    success_msg: Required variable {{ item }} is defined
+    quiet: true
+  with_items:
+    - host_backend_fqdn
+    - host_frontend_fqdn
+    - symfony_app_secret
+    - symfony_db_name
+    - symfony_db_user
+    - symfony_db_password
+    - nginx_backend_root
+    - nginx_frontend_root
+
+- name: Run "apt-get update" before install packages
+  ansible.builtin.apt:
+    update_cache: yes
+  when: ansible_facts['pkg_mgr'] == "apt"
+
+- name: Install dependencies
+  ansible.builtin.package:
+    name: "{{ package_dependencies }}"
+    state: latest
+  tags: dependencies_install
+
+- name: (Amazon Linux) Enable the NGINX Amazon extras package repository
+  ansible.builtin.command:
+    cmd: amazon-linux-extras enable nginx1
+    creates: /usr/sbin/nginx
+  when: ansible_facts['distribution'] == 'Amazon'
+
+- name: Install Nginx {{ nginx_version | default('latest') }}
+  ansible.builtin.package:
+    name: nginx{{ nginx_version }}
+    state: "{{ nginx_state }}"
+  tags: nginx_install
+  notify: (Handler) Run NGINX
+  
+- name: Start NGINX
+  ansible.builtin.service:
+    name: nginx
+    state: started
+
+- name: Configure Nginx
+  ansible.builtin.include_tasks: "config_nginx.yml"
+  tags: nginx_config
+
+- name: Install MariaDB {{ mariadb_version | default('latest') }}
+  ansible.builtin.package:
+    name: mariadb-server{{ mariadb_version }}
+    state: "{{ mariadb_state }}"
+  tags: mariadb_install
+  notify: (Handler) Run MARIADB
+
+- name: Configure MariaDB
+  ansible.builtin.include_tasks: "config_mariadb.yml"
+  tags: mariadb_config
+
+- name: Install PHP {{ php_version }}
+  ansible.builtin.include_tasks: "install_php_{{ ansible_facts['distribution'] | lower }}.yml"
+  tags: php_install
+
+- name: Configure PHP
+  ansible.builtin.include_tasks: "config_php.yml"
+  tags: php_config

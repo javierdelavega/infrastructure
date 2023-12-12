@@ -1,0 +1,14 @@
+ssh
+secrets.yml
+hosts.yml
+*.tar
+*.gz
+.DS_Store
+.DS_Store?
+._*
+docker
+terraform.tfvars
+*tfstate*
+.terraform*
+*.pem
+*.pub

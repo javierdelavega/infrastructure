@@ -1,0 +1,8 @@
+---
+
+- name: Deploy APP to STAGING
+  hosts: staging
+  vars:
+    deploy_target: "staging"
+  roles:
+    - { role: deploy_app }

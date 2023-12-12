@@ -1,0 +1,5 @@
+---
+
+- name: Configure frontend to point to correct API url 
+  shell: chdir={{ansistrano_release_path.stdout}}/assets
+      sed -i 's,http://localhost:8005,https://{{ host_backend_fqdn }},g' Home.ea06a842.js

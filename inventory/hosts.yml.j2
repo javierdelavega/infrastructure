@@ -1,0 +1,21 @@
+---
+
+webservers:
+  hosts:
+    staging:
+      ansible_host: {{ staging_host }}
+      ansible_user: {{ staging_user }}
+      host_backend_fqdn: {{ staging_backend_fqdn }}
+      host_frontend_fqdn: {{ staging_frontend_fqdn }}
+    production:
+      ansible_host: {{ production_host }}
+      ansible_user: {{ production_user }}
+      host_backend_fqdn: {{ production_backend_fqdn }}
+      host_frontend_fqdn: {{ production_frontend_fqdn }}
+    aws:
+      ansible_host: {{ terraform.outputs.public_dns.value }}
+      ansible_user: {{ aws_user }}
+      ansible_ssh_private_key_file: {{ aws_ssh_key_file }}
+      ansible_become: true
+      host_backend_fqdn: {{ aws_backend_fqdn }}
+      host_frontend_fqdn: {{ aws_frontend_fqdn }}

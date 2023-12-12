@@ -1,0 +1,19 @@
+server {
+    listen {{ nginx_port }};
+    root {{ nginx_backend_root }};
+
+    index index.php index.html index.htm;
+
+    server_name {{ host_backend_fqdn }};
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_pass {{ nginx_fascgi_pass }};
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}

@@ -1,0 +1,16 @@
+---
+
+- name: Install PHP-FPM {{ php_version }}
+  ansible.builtin.package:
+    name:
+      - php{{ php_version }}-fpm
+    state: "{{ php_state }}"
+  tags: php_install
+  notify: (Handler) Run PHP-FPM
+
+- name: Install PHP Extensions
+  ansible.builtin.package:
+    name: "{{ php_extensions }}"
+    state: latest
+  tags: php_install_extensions
+  notify: (Handler) Run PHP-FPM

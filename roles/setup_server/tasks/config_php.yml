@@ -1,0 +1,39 @@
+---
+
+- name: Write the php config
+  ansible.builtin.template:
+    src: php.ini.j2
+    dest: "{{ php_config_dir }}/php.ini"
+    owner: root
+    group: root
+    mode: 0644
+  notify: (Handler) Run PHP-FPM
+
+- name: Write the php-fpm config
+  ansible.builtin.template:
+    src: php-fpm-www.conf.j2
+    dest: "{{ php_fpm_daemon_config_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify: (Handler) Run PHP-FPM
+
+- name: Ensure php-fpm socket directory exists
+  ansible.builtin.file:
+    path: "{{ php_fpm_daemon_sock_dir_rocky }}"
+    state: directory
+    owner: root
+    group: root
+  notify: (Handler) Run PHP-FPM
+
+- name: Write the apcu config
+  ansible.builtin.template:
+    src: apc.ini.j2
+    dest: "{{ php_mod_config_dir }}/{{ php_apcu_filename }}"
+    owner: root
+    group: root
+    force: true
+    mode: 0644
+  notify: (Handler) Run PHP-FPM
+
+  

@@ -1,0 +1,10 @@
+---
+
+- name: Deploy APP to PRODUCTION
+  hosts: aws
+  vars:
+    deploy_target: "production"
+  vars_files:
+    - secrets.yml
+  roles:
+    - { role: deploy_app }

@@ -1,0 +1,24 @@
+---
+dependencies:
+  - role: ansistrano.deploy
+    vars:
+      ansistrano_deploy_to: "{{ backend_deploy_path }}"
+      ansistrano_keep_releases: 3
+      ansistrano_deploy_via: git
+      ansistrano_git_repo: "{{ git_repo }}"
+      ansistrano_git_branch: "{{ git_branch }}"
+      #using ssh-agent for compatibility with ansible-semaphore
+      #ansistrano_git_identity_key_path: ""
+      ansistrano_after_symlink_shared_tasks_file: "{{ playbook_dir }}/deploy_app_tasks/codechallenge-after-symlink-shared-tasks.yml"
+  
+  - role: ansistrano.deploy
+    vars:
+    ansistrano_deploy_to: "{{ frontend_deploy_path }}"
+    ansistrano_keep_releases: 3
+    ansistrano_deploy_via: git
+    ansistrano_git_repo: "{{ git_frontend_repo }}"
+    ansistrano_git_branch: "{{ git_frontend_branch }}"
+    ansistrano_git_repo_tree: "{{ frontend_repo_tree }}"
+    ansistrano_after_symlink_shared_tasks_file: "{{ playbook_dir }}/deploy_app_tasks/codechallenge-after-symlink-shared-tasks-frontend.yml"
+    #using ssh-agent for compatibility with ansible-semaphore
+    #ansistrano_git_identity_key_path: ""

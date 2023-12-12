@@ -1,0 +1,12 @@
+backend_deploy_path: /var/www/codechallenge
+frontend_deploy_path: /var/www/codechallenge-front
+frontend_repo_tree: frontend
+git_repo: git@github.com:javierdelavega/codechallenge.git
+git_frontend_repo: git@github.com:javierdelavega/codechallenge-ddd.git
+git_frontend_branch: main
+git_branch: "{{ 'main' if deploy_target == 'production' else deploy_target }}"
+symfony_env: "prod"
+symfony_composer_path: "/usr/local/bin/composer"
+symfony_composer_dev_options: '--ignore-platform-reqs --no-scripts'
+symfony_composer_prod_options: '--no-dev --optimize-autoloader --no-interaction'
+symfony_doctrine_fixtures_options: '--purge-exclusions=api_token --purge-exclusions=cart --purge-exclusions=cart_items --purge-exclusions=doctrine_migrations_versions --purge-exclusions=item --purge-exclusions=orders --purge-exclusions=order_line --purge-exclusions=order_order_lines --purge-exclusions=user --no-interaction'

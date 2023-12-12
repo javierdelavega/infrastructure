@@ -1,0 +1,37 @@
+---
+
+- name: Add REMI repo GPG key
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://rpms.remirepo.net/enterprise/9/RPM-GPG-KEY-remi
+
+- name: Install EPEL and REMI repos
+  ansible.builtin.dnf:
+    name:
+      - epel-release
+      - 'http://rpms.remirepo.net/enterprise/remi-release-9.rpm'
+    state: latest
+
+- name: Install dnf-utils
+  ansible.builtin.dnf:
+    name: dnf-utils
+    state: latest
+
+- name: Check if remi php module is enabled
+  shell: dnf module list --enabled | grep php || true
+  register: remi_php
+  changed_when: remi_php.stdout == ''
+
+- name: Enable PHP{{ php_version }} REMI repo
+  shell: "dnf module reset php -y && dnf module enable php:remi-{{php_version}} -y"
+  when: "'remi' not in remi_php.stdout"
+
+- name: Install PHP-FPM {{ php_version }}
+  ansible.builtin.dnf:
+    name: php-fpm
+    state: latest
+
+- name: Install PHP Extensions
+  ansible.builtin.dnf:
+    name: "{{ php_extensions }}"
+    state: latest

@@ -1,0 +1,10 @@
+---
+
+# Versions #
+nginx_version: ''
+mariadb_version: ''
+php_branch: '8.2'
+php_release: ''
+
+# Ports #
+nginx_port: 80

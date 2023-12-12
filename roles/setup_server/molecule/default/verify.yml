@@ -1,0 +1,49 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Include role vars
+      ansible.builtin.include_vars: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/vars/main.yml"
+
+    - name: Include testing env vars
+      ansible.builtin.include_vars: "test_vars.yml"
+      
+    - name: Check if NGINX is installed
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      check_mode: true
+      register: install
+      failed_when: (install is changed) or (install is failed)
+
+    - name: Check if NGINX service is running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+      check_mode: true
+      register: service
+      failed_when: (service is changed) or (service is failed)
+
+    - name: Point frontend fqdn to localhost
+      ansible.builtin.shell: "echo 127.0.0.1 {{ host_frontend_fqdn }} >> /etc/hosts"
+
+    - name: Point backend fqdn to localhost
+      ansible.builtin.shell: "echo 127.0.0.1 {{ host_backend_fqdn }} >> /etc/hosts"
+
+    - name: Create frontend index.html for testing purposes
+      ansible.builtin.shell: "echo test >> {{ nginx_frontend_root }}/index.html"
+
+    - name: Create backend index.php for testing purposes
+      ansible.builtin.shell: >-
+        echo "<?php phpinfo() ?>" >> {{ nginx_backend_root }}/index.php
+
+    - name: Verify NGINX is working on the frontend vhost
+      ansible.builtin.uri:
+        url: http://{{ host_frontend_fqdn }}
+        status_code: 200
+
+    - name: Verify NGINX is working on the backend vhost
+      ansible.builtin.uri:
+        url: http://{{ host_backend_fqdn }}
+        status_code: 200

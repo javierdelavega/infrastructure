@@ -1,0 +1,62 @@
+---
+
+- name: Ensure composer installed 
+  stat: path={{symfony_composer_path}}
+  register: composer_file
+
+- name: Run composer self-update
+  shell: "{{symfony_composer_path}} selfupdate --no-interaction"
+  when: composer_file.stat.exists
+  register: composer_self_update_result
+  changed_when: composer_self_update_result.stderr is search('Updating')
+
+- name: Install stable composer
+  get_url: url=https://getcomposer.org/composer-stable.phar dest={{symfony_composer_path}} mode=0755 validate_certs=no force=no
+  when: not composer_file.stat.exists
+
+- name: write symfony .env file
+  ansible.builtin.template:
+    src: env.local.j2
+    dest: "{{ansistrano_release_path.stdout}}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  loop:
+    - .env.local
+    - .env.prod
+
+- name: Run composer install for development
+  shell: chdir={{ansistrano_release_path.stdout}}
+      COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=dev {{symfony_composer_path}} install {{symfony_composer_dev_options}}
+  register: composer_install_result
+  changed_when: composer_install_result.stderr is search('- \w+ing ')
+
+- name: Create the database if not exists
+  shell: chdir={{ansistrano_release_path.stdout}}
+      php bin/console doctrine:database:create --if-not-exists --no-interaction
+
+- name: Run database migrations
+  shell: chdir={{ansistrano_release_path.stdout}}
+      php bin/console doctrine:migrations:migrate --no-interaction
+
+- name: Run database fixtures
+  shell: chdir={{ansistrano_release_path.stdout}}
+      APP_ENV=dev php bin/console doctrine:fixtures:load {{ symfony_doctrine_fixtures_options }}
+
+- name: Run composer install for production
+  shell: chdir={{ansistrano_release_path.stdout}}
+    export SYMFONY_ENV={{symfony_env}} APP_ENV={{symfony_env}} COMPOSER_ALLOW_SUPERUSER=1 && {{symfony_composer_path}} install {{symfony_composer_prod_options}}
+  register: composer_install_result
+  changed_when: composer_install_result.stderr is search('- \w+ing ')
+
+- name: Optimize env variables
+  shell: chdir={{ansistrano_release_path.stdout}}
+        COMPOSER_ALLOW_SUPERUSER=1 composer dump-env prod
+
+- name: Clear cache
+  shell: chdir={{ansistrano_release_path.stdout}}
+      APP_ENV=prod APP_DEBUG=0 php bin/console cache:clear
+
+- name: Ensure write permission for nginx user to cache an logs dir
+  shell: chdir={{ansistrano_release_path.stdout}}
+      chown -R www-data:www-data var
